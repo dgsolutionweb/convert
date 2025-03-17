@@ -6,7 +6,7 @@ services:
     ports:
       - "5000:5000"
     volumes:
-      - ./downloads:/app/downloads
+      - ./downloads:/app/downloads:rw
     restart: unless-stopped
     environment:
       - PORT=5000

@@ -38,7 +38,7 @@ Isso ocorre porque o YouTube detecta que o download está sendo feito a partir d
    
 2. Se estiver usando Docker, você precisa colocar o arquivo dentro do container. Execute:
    ```
-   docker cp youtube.cookies.txt convert-youtube-converter-1:/app/
+   docker cp youtube.cookies.txt youtube-converter:/app/
    ```
 
 ### Passo 3: Verificar a configuração

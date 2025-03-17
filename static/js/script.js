@@ -1,27 +1,26 @@
 document.addEventListener('DOMContentLoaded', function() {
-    const urlInput = document.getElementById('url');
-    const downloadBtn = document.getElementById('download-btn');
+    const urlInput = document.getElementById('url-input');
+    const convertBtn = document.getElementById('convert-btn');
+    const downloadList = document.getElementById('download-list');
     const errorMessage = document.getElementById('error-message');
-    const downloadsContainer = document.getElementById('downloads-container');
-    const downloadTemplate = document.getElementById('download-item-template');
-
-    // Mapa para armazenar os intervalos de atualização de status
+    
+    // Map para armazenar os intervalos de verificação de status
     const statusCheckers = new Map();
-
+    
     // Função para mostrar erro
     function showError(message) {
         errorMessage.textContent = message;
-        errorMessage.classList.remove('d-none');
+        errorMessage.style.display = 'block';
         setTimeout(() => {
-            errorMessage.classList.add('d-none');
+            errorMessage.style.display = 'none';
         }, 5000);
     }
-
+    
     // Lidar com erros de conexão
     function handleConnectionError() {
         showError('Erro de conexão com o servidor. Verifique se o servidor está em execução.');
     }
-
+    
     // Adicionar um manipulador de eventos para capturar erros de conexão
     window.addEventListener('error', (e) => {
         if (
@@ -32,30 +31,17 @@ document.addEventListener('DOMContentLoaded', function() {
             handleConnectionError();
         }
     });
-
-    // Função para criar um novo item de download
-    function createDownloadItem(title, downloadId) {
-        const clone = downloadTemplate.content.cloneNode(true);
-        const downloadItem = clone.querySelector('.download-item');
-        
-        downloadItem.id = `download-${downloadId}`;
-        downloadItem.querySelector('.video-title').textContent = title;
-        
-        downloadsContainer.insertBefore(downloadItem, downloadsContainer.firstChild);
-        return downloadItem;
-    }
-
+    
     // Função para atualizar o status do download
     function updateDownloadStatus(downloadId, status) {
         const downloadItem = document.getElementById(`download-${downloadId}`);
         if (!downloadItem) {
-            const downloadList = document.getElementById('download-list');
             const newItem = document.createElement('div');
             newItem.id = `download-${downloadId}`;
             newItem.className = 'download-item';
             downloadList.appendChild(newItem);
         }
-
+    
         const item = document.getElementById(`download-${downloadId}`);
         
         if (status.status === 'downloading') {
@@ -96,7 +82,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         <span>Conversão concluída!</span>
                     </div>
                     <div class="download-actions">
-                        <a href="${status.download_url}" class="btn btn-success download-btn">
+                        <a href="${status.download_url}" class="download-btn">
                             <i class="fas fa-download"></i> Salvar MP3
                         </a>
                     </div>
@@ -117,21 +103,21 @@ document.addEventListener('DOMContentLoaded', function() {
             statusCheckers.delete(downloadId);
         }
     }
-
+    
     // Função para iniciar o monitoramento de status
     function startStatusChecker(downloadId) {
         if (statusCheckers.has(downloadId)) {
             clearInterval(statusCheckers.get(downloadId));
         }
-
+    
         let retries = 0;
         const maxRetries = 180; // 3 minutos
-
+    
         statusCheckers.set(downloadId, setInterval(() => {
             fetch(`/status/${encodeURIComponent(downloadId)}`)
                 .then(response => response.json())
                 .then(status => {
-                    if (status) {
+                    if (status && status.status !== 'not_found') {
                         updateDownloadStatus(downloadId, status);
                         if (status.status === 'finished' || status.status === 'error') {
                             clearInterval(statusCheckers.get(downloadId));
@@ -162,53 +148,48 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
         }, 1000));
     }
-
-    // Handler do botão de download
-    downloadBtn.addEventListener('click', async () => {
+    
+    // Event handler para o botão de download
+    convertBtn.addEventListener('click', function() {
         const url = urlInput.value.trim();
-        
         if (!url) {
             showError('Por favor, insira uma URL do YouTube');
             return;
         }
-
+        
+        // Verificar se é uma URL do YouTube válida
         if (!url.match(/^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/.+$/)) {
             showError('Por favor, insira uma URL válida do YouTube');
             return;
         }
-
-        // Desabilita o botão durante o processo
-        downloadBtn.disabled = true;
         
-        try {
-            const response = await fetch('/download', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ url }),
-            });
-
-            const data = await response.json();
-            
+        // Enviar a solicitação de download
+        fetch('/download', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ url: url }),
+        })
+        .then(response => response.json())
+        .then(data => {
             if (data.error) {
                 showError(data.error);
             } else {
-                const downloadItem = createDownloadItem(data.title, data.download_id);
                 startStatusChecker(data.download_id);
                 urlInput.value = '';
             }
-        } catch (error) {
-            showError('Erro ao iniciar o download. Por favor, tente novamente.');
-        } finally {
-            downloadBtn.disabled = false;
-        }
+        })
+        .catch(error => {
+            console.error('Erro:', error);
+            showError('Erro ao se comunicar com o servidor');
+        });
     });
-
-    // Permite pressionar Enter para iniciar o download
-    urlInput.addEventListener('keypress', (e) => {
+    
+    // Permitir pressionar Enter para iniciar o download
+    urlInput.addEventListener('keypress', function(e) {
         if (e.key === 'Enter') {
-            downloadBtn.click();
+            convertBtn.click();
         }
     });
 }); 
