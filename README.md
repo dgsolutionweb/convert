@@ -40,6 +40,12 @@ Você pode personalizar as configurações no arquivo `.env`:
 - `PORT` - A porta em que o aplicativo será executado (padrão: 5000)
 - `FLASK_ENV` - O ambiente (production ou development)
 
+### Problemas com bloqueio do YouTube
+
+Ao executar o converter em um VPS ou servidor, você pode encontrar erros como "Sign in to confirm you're not a bot" do YouTube. Isso acontece porque o YouTube detecta downloads a partir de servidores e aplica proteções anti-bot.
+
+Para resolver esse problema, você precisa configurar cookies de autenticação do YouTube. Consulte o arquivo [COOKIES_SETUP.md](COOKIES_SETUP.md) para instruções detalhadas.
+
 ## Manutenção
 
 Para parar o serviço:

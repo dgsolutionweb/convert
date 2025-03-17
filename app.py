@@ -53,6 +53,10 @@ def download_callback(d):
 
 def download_thread(url, download_id):
     try:
+        # Verifica se temos um arquivo de cookies
+        cookies_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'youtube.cookies.txt')
+        use_cookies = os.path.exists(cookies_file)
+        
         ydl_opts = {
             'format': 'bestaudio/best',
             'outtmpl': os.path.join('downloads', '%(title)s.%(ext)s'),
@@ -63,6 +67,10 @@ def download_thread(url, download_id):
                 'preferredquality': '192',
             }],
         }
+        
+        # Adiciona cookies se o arquivo existir
+        if use_cookies:
+            ydl_opts['cookiefile'] = cookies_file
         
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(url, download=False)
@@ -208,6 +216,21 @@ def download_file(filename):
         return send_from_directory('downloads', filename, as_attachment=True)
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+@app.route('/cookies_status')
+def cookies_status():
+    cookies_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'youtube.cookies.txt')
+    status = {
+        'cookies_file_exists': os.path.exists(cookies_file),
+        'last_modified': None
+    }
+    
+    if status['cookies_file_exists']:
+        import datetime
+        mod_time = os.path.getmtime(cookies_file)
+        status['last_modified'] = datetime.datetime.fromtimestamp(mod_time).strftime('%Y-%m-%d %H:%M:%S')
+    
+    return jsonify(status)
 
 if __name__ == '__main__':
     if not configurar_ffmpeg():
