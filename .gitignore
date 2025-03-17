@@ -1,0 +1,30 @@
+# Ambiente virtual
+venv/
+.venv/
+env/
+ENV/
+
+# Arquivos de cache Python
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+
+# Logs
+*.log
+
+# Arquivos de mídia baixados
+downloads/
+*.mp3
+*.mp4
+*.webm
+
+# Configurações do ambiente
+.env
+
+# Cache Docker
+.docker/
+
+# Outros
+.DS_Store
+Thumbs.db 
