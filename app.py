@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, send_from_directory
 import yt_dlp
 import os
 import sys
@@ -79,18 +79,20 @@ def download_thread(url, download_id):
             ydl.download([url])
             
             # Verificamos se o arquivo MP3 foi criado
-            expected_mp3 = os.path.join('downloads', f"{video_title}.mp3")
+            mp3_filename = f"{video_title}.mp3"
+            expected_mp3 = os.path.join('downloads', mp3_filename)
             if os.path.exists(expected_mp3):
                 download_progress[video_title] = {
                     'status': 'finished',
-                    'progress': 100
+                    'progress': 100,
+                    'download_url': f'/download_file/{mp3_filename}'
                 }
             else:
                 raise Exception('Arquivo MP3 não foi criado')
                 
     except Exception as e:
         print(f"Erro no download: {str(e)}")
-        if video_title:
+        if 'video_title' in locals():
             download_progress[video_title] = {
                 'status': 'error',
                 'error': str(e)
@@ -199,6 +201,13 @@ def get_status(download_id):
             return jsonify({'status': 'not_found'})
     except Exception as e:
         return jsonify({'status': 'error', 'error': str(e)})
+
+@app.route('/download_file/<filename>')
+def download_file(filename):
+    try:
+        return send_from_directory('downloads', filename, as_attachment=True)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
     if not configurar_ffmpeg():

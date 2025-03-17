@@ -93,7 +93,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 <div class="download-info">
                     <div class="filename">${downloadId}</div>
                     <div class="status-info success">
-                        <span>Download concluído!</span>
+                        <span>Conversão concluída!</span>
+                    </div>
+                    <div class="download-actions">
+                        <a href="${status.download_url}" class="btn btn-success download-btn">
+                            <i class="fas fa-download"></i> Salvar MP3
+                        </a>
                     </div>
                 </div>
             `;
